@@ -87,6 +87,88 @@ describe("findAll", function () {
   });
 });
 
+
+/************************************** filter */
+describe("filter", function () {
+  test("filters based on name", async function () {
+    let filters = {name: "1"}
+    let companies = await Company.filter(filters)
+    expect(companies).toEqual([
+      {
+        handle: "c1",
+        name: "C1",
+        description: "Desc1",
+        numEmployees: 1,
+        logoUrl: "http://c1.img",
+      }
+    ])
+  })
+  test("filters based on minEmployees", async function () {
+    let filters = {minEmployees: "2"}
+    let companies = await Company.filter(filters)
+    expect(companies).toEqual([
+      {
+        handle: "c3",
+        name: "C3",
+        description: "Desc3",
+        numEmployees: 3,
+        logoUrl: "http://c3.img",
+      }
+    ])
+  })
+  test("filters based on maxEmployees", async function () {
+    let filters = {maxEmployees: 2}
+    let companies = await Company.filter(filters)
+    expect(companies).toEqual([
+      {
+        handle: "c1",
+        name: "C1",
+        description: "Desc1",
+        numEmployees: 1,
+        logoUrl: "http://c1.img",
+      }
+    ])
+  })
+  test("filters based on min and max Employees", async function () {
+    let filters = {minEmployees: "1", maxEmployees: "2"}
+    let companies = await Company.filter(filters)
+    expect(companies).toEqual([
+      {
+        handle: "c1",
+        name: "C1",
+        description: "Desc1",
+        numEmployees: 1,
+        logoUrl: "http://c1.img",
+      },
+      {
+        handle: "c2",
+        name: "C2",
+        description: "Desc2",
+        numEmployees: 2,
+        logoUrl: "http://c2.img",
+      }
+    ])
+  })
+  test("filters based on name and max Employees", async function () {
+    let filters = {name: "2", maxEmployees: "100"}
+    let companies = await Company.filter(filters)
+    expect(companies).toEqual([
+      {
+        handle: "c2",
+        name: "C2",
+        description: "Desc2",
+        numEmployees: 2,
+        logoUrl: "http://c2.img",
+      }
+    ])
+  })
+  // test("min and max incorrect", async function () {
+  //   let filters = {minEmployees: "5", maxEmployees: "1"}
+  //   expect(await Company.filter(filters)).toThrowError(new BadRequestError("max employees must be greater than min employees"))
+  // })
+})
+
+
 /************************************** get */
 
 describe("get", function () {

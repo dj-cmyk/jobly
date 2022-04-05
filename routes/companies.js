@@ -52,8 +52,22 @@ router.post("/", ensureLoggedIn, async function (req, res, next) {
 
 router.get("/", async function (req, res, next) {
   try {
-    const companies = await Company.findAll();
-    return res.json({ companies });
+      const searchFilterOptions = ["name", "minEmployees", "maxEmployees"]
+      const filters = req.query
+      const keys = Object.keys(filters)
+
+      if (keys.length > 0) {
+        for (let key of keys) {
+          if (!searchFilterOptions.includes(key)){
+            throw new BadRequestError("invalid filter request")
+          }
+        }
+        const companies = await Company.filter(filters)
+        return res.json({companies})
+      }
+
+      const companies = await Company.findAll();
+      return res.json({ companies });
   } catch (err) {
     return next(err);
   }

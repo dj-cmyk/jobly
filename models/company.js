@@ -1,5 +1,6 @@
 "use strict";
 
+const res = require("express/lib/response");
 const db = require("../db");
 const { BadRequestError, NotFoundError } = require("../expressError");
 const { sqlForPartialUpdate } = require("../helpers/sql");
@@ -60,6 +61,67 @@ class Company {
            ORDER BY name`);
     return companiesRes.rows;
   }
+
+
+    /** Filter all companies based on any or all of the following filter criteria in the query string.
+   *
+   * Filter Criteria - 
+   * name - filter by company name: 
+   *    if the string “net” is passed in, this should find any company who name contains the word “net”, case-insensitive (so “Study Networks” should be included).
+   * 
+   * minEmployees - filter to companies that have at least that number of employees
+   * 
+   * maxEmployees - filter to companies that have no more than that number of employees
+   * 
+   * Returns { handle, name, description, numEmployees, logoUrl, jobs } of all companies that meet the filtering requirements
+   *
+   * Throws 400 BadRequestError if the minEmployees parameter is greater than the maxEmployees parameter.
+   **/
+
+  static async filter(filters) {
+    // sql stmt base to build:
+    let sqlStmtForFilter = `
+      SELECT handle,
+            name,
+            description,
+            num_employees AS "numEmployees",
+            logo_url AS "logoUrl"
+      FROM companies`
+
+    // if name in filters object - add WHERE name ILIKE %nameFilter%
+    if (filters.name !== undefined) {
+      sqlStmtForFilter += ` WHERE name ILIKE '%${filters.name}%'`
+    }
+    // separating items in sql query statement
+    if (Object.keys(filters).length > 1 && filters.name !== undefined) {
+      sqlStmtForFilter += ` AND`
+    } else if (filters.name === undefined) {
+      sqlStmtForFilter += ` WHERE`
+    }
+
+    // if minEmployees AND maxEmployees in filters object - check if MAX is greater than MIN, then add to sql query, then add appropriate filter to sql query statement
+    if (filters.minEmployees !== undefined && filters.maxEmployees !== undefined) {
+      if (parseInt(filters.maxEmployees) < parseInt(filters.minEmployees)){
+        throw new BadRequestError("max employees must be greater than min employees")
+      } else {
+        sqlStmtForFilter += ` num_employees BETWEEN ${parseInt(filters.minEmployees)} AND ${parseInt(filters.maxEmployees)}`
+      }
+    }  else if (filters.minEmployees !== undefined) {
+      sqlStmtForFilter += ` num_employees > ${parseInt(filters.minEmployees)}`
+    } else if (filters.maxEmployees !== undefined) {
+      sqlStmtForFilter += ` num_employees < ${parseInt(filters.maxEmployees)}`
+    }
+
+    // make query using final version of sql query statement
+    const filteredRes = await db.query(sqlStmtForFilter);
+    return filteredRes.rows;
+  }
+
+
+
+
+
+
 
   /** Given a company handle, return data about company.
    *
