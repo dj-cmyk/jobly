@@ -132,21 +132,43 @@ class Company {
    **/
 
   static async get(handle) {
+    // const noJobRes = await db.query(
+    //   `SELECT c.handle, c.name, c.description, j.title
+    //   FROM companies AS c
+    //   FULL JOIN jobs AS j
+    //   ON c.handle = j.company_handle`
+    // )
+    // const coJobs = noJobRes.rows
+    // return coJobs
+    
     const companyRes = await db.query(
-          `SELECT handle,
-                  name,
-                  description,
-                  num_employees AS "numEmployees",
-                  logo_url AS "logoUrl"
-           FROM companies
-           WHERE handle = $1`,
+          `SELECT c.handle AS "co_handle",
+                  c.name,
+                  c.description,
+                  c.num_employees AS "numEmployees",
+                  c.logo_url AS "logoUrl",
+                  j.id, 
+                  j.title,
+                  j.salary, 
+                  j.equity,
+                  j.company_handle
+           FROM companies AS c
+           FULL JOIN jobs AS j
+           ON c.handle = j.company_handle
+           WHERE c.handle = $1`,
         [handle]);
-
-    const company = companyRes.rows[0];
-
-    if (!company) throw new NotFoundError(`No company: ${handle}`);
-
-    return company;
+      
+      const company = companyRes.rows[0];
+      if (!company) throw new NotFoundError(`No company: ${handle}`);
+      
+      const {co_handle, name, description, numEmployees, logoUrl} = companyRes.rows[0]
+      
+      if (company.title === null){
+        return {co_handle, name, description, numEmployees, logoUrl};
+      } else {
+        const jobs = companyRes.rows.map(j => ({id: j.id, title: j.title, salary: j.salary, equity: j.equity, company_handle: j.company_handle}))
+        return {co_handle, name, description, numEmployees, logoUrl, jobs};
+      }
   }
 
   /** Update company data with `data`.
