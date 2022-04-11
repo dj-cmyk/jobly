@@ -98,7 +98,7 @@ class User {
 
   /** Find all users.
    *
-   * Returns [{ username, first_name, last_name, email, is_admin }, ...]
+   * Returns [{ username, first_name, last_name, email, is_admin, }, ...]
    **/
 
   static async findAll() {
@@ -125,21 +125,23 @@ class User {
 
   static async get(username) {
     const userRes = await db.query(
-          `SELECT username,
-                  first_name AS "firstName",
-                  last_name AS "lastName",
-                  email,
-                  is_admin AS "isAdmin"
-           FROM users
-           WHERE username = $1`,
+          `SELECT u.username AS "user",
+                  u.first_name AS "firstName",
+                  u.last_name AS "lastName",
+                  u.email,
+                  u.is_admin AS "isAdmin",
+                  a.job_id AS "jobId"
+           FROM users AS u
+           FULL JOIN applications AS a
+           ON u.username = a.username
+           WHERE u.username = $1`,
         [username],
     );
+    if (!userRes.rows[0]) throw new NotFoundError(`No user: ${username}`);
 
-    const user = userRes.rows[0];
-
-    if (!user) throw new NotFoundError(`No user: ${username}`);
-
-    return user;
+    const { user, firstName, lastName, email, isAdmin } = userRes.rows[0]
+    const jobs = userRes.rows.map(r => r.jobId)
+    return { user, firstName, lastName, email, isAdmin, jobs };
   }
 
   /** Update user data with `data`.

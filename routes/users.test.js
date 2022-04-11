@@ -179,11 +179,14 @@ describe("GET /users/:username", function () {
         .set("authorization", `Bearer ${u1Token}`);
     expect(resp.body).toEqual({
       user: {
-        username: "u1",
+        user: "u1",
         firstName: "U1F",
         lastName: "U1L",
         email: "user1@user.com",
         isAdmin: false,
+        jobs: [
+          null
+        ]
       },
     });
   });
@@ -194,11 +197,14 @@ describe("GET /users/:username", function () {
         .set("authorization", `Bearer ${u4Token}`);
     expect(resp.body).toEqual({
       user: {
-        username: "u1",
+        user: "u1",
         firstName: "U1F",
         lastName: "U1L",
         email: "user1@user.com",
         isAdmin: false,
+        jobs: [
+          null
+        ]
       },
     });
   });

@@ -64,7 +64,7 @@ router.get("/", ensureLoggedIn, async function (req, res, next) {
 
 /** GET /[username] => { user }
  *
- * Returns { username, firstName, lastName, isAdmin }
+ * Returns { username, firstName, lastName, isAdmin, jobs: [jobId1, jobId2] }
  *
  * Authorization required: login, admin status, OR SAME USER
  **/

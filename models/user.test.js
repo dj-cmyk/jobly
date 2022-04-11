@@ -136,18 +136,21 @@ describe("get", function () {
   test("works", async function () {
     let user = await User.get("u1");
     expect(user).toEqual({
-      username: "u1",
+      user: "u1",
       firstName: "U1F",
       lastName: "U1L",
       email: "u1@email.com",
       isAdmin: false,
+      jobs: [
+        null
+      ]
     });
   });
 
   test("not found if no such user", async function () {
     try {
-      await User.get("nope");
-      fail();
+      let user = await User.get("nope");
+      expect(user).toThrow();
     } catch (err) {
       expect(err instanceof NotFoundError).toBeTruthy();
     }
