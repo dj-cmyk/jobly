@@ -13,6 +13,7 @@ const {
   commonAfterEach,
   commonAfterAll,
 } = require("./_testCommon");
+const Job = require("./job");
 
 beforeAll(commonBeforeAll);
 beforeEach(commonBeforeEach);
@@ -225,6 +226,52 @@ describe("remove", function () {
       fail();
     } catch (err) {
       expect(err instanceof NotFoundError).toBeTruthy();
+    }
+  });
+});
+
+
+/************************************** apply for jobs */
+
+describe("apply", function () {
+  test("works", async function () {
+    const jobs = await Job.findAll()
+    const jobId = jobs[0].id
+    const users = await User.findAll()
+    const username = users[0].username
+    await User.apply(username, jobId);
+    const res = await db.query(
+        `SELECT username, job_id FROM applications WHERE username='u1'`);
+    expect(res.rows.length).toEqual(1);
+  });
+
+  test("not found if no such user", async function () {
+    const jobs = await Job.findAll()
+    try {
+      await User.apply("nope", jobs[0].id);
+      fail();
+    } catch (err) {
+      expect(err instanceof NotFoundError).toBeTruthy();
+    }
+  });
+
+  test("not found if no such jobId", async function () {
+    try {
+      await User.apply("u1", 0);
+      fail();
+    } catch (err) {
+      expect(err instanceof NotFoundError).toBeTruthy();
+    }
+  });
+
+  test("bad request with dup data", async function () {
+    const jobs = await Job.findAll()
+    try {
+      await User.apply("u1", jobs[0].id);
+      await User.apply("u1", jobs[0].id);
+      fail();
+    } catch (err) {
+      expect(err instanceof BadRequestError).toBeTruthy();
     }
   });
 });

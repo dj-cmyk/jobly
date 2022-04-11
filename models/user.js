@@ -203,8 +203,57 @@ class User {
     const user = result.rows[0];
 
     if (!user) throw new NotFoundError(`No user: ${username}`);
+
+  }
+
+
+
+  /** User applies to Job.
+   *
+   * Returns { applied: jobId }
+   * 
+   * Duplicate check to make sure user has not already applied to that job
+   * Throws BadRequestError on duplicates.
+   **/
+  static async apply(username, jobId) {
+    const duplicateCheck = await db.query(
+      `SELECT username, job_id
+       FROM applications
+       WHERE username = $1
+       AND job_id = $2`,
+    [username, jobId],
+    );
+
+    if (duplicateCheck.rows[0]) {
+      throw new BadRequestError(`Duplicate application: ${username} for job ${jobId}`);
+    }
+    const userCheck = await db.query(
+      `SELECT username FROM users
+      WHERE username = $1`, [username])
+    if (!userCheck.rows[0]) {
+      throw new NotFoundError(`No such user: ${username}`);
+    }
+    const jobCheck = await db.query(
+      `SELECT id FROM jobs
+      WHERE id = $1`, [jobId])
+    if (!jobCheck.rows[0]) {
+      throw new NotFoundError(`No such job: ${jobId}`)
+    }
+
+    const result = await db.query(
+          `INSERT INTO applications
+          (username, job_id)
+          VALUES ($1, $2)
+          RETURNING username, job_id`,
+        [username, jobId],
+    );
+
+    const application = result.rows[0];
+
+    return { applied: jobId };
   }
 }
+
 
 
 module.exports = User;
